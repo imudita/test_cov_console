@@ -6,11 +6,30 @@ A test coverage project.
 
 This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+# Flutter Coverage Test
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This small tools is used to generate Flutter Coverage Test on console
+
+## How to run (Windows 10 Environment)
+
+## From Android Studio Terminal
+### run the following command to make sure all flutter library is up-to-date
+E:\test\coverage> flutter pub get
+Running "flutter pub get" in coverage...                            0.5s
+
+### run the following command to generate lcov.info on coverage directory
+E:\test\coverage>flutter test --coverage
+00:02 +1: All tests passed!
+
+### run the tool to generate report form lcov.info
+E:\test\coverage> dart lib\coverage.dart coverage\lcov.info
+lib/coverage.dart: Warning: Interpreting this as package URI, 'package:coverage/coverage.dart'.
+---------------------------------------------|---------|---------|---------|-------------------|
+File                                         |% Branch | % Funcs | % Lines | Uncovered Line #s |
+---------------------------------------------|---------|---------|---------|-------------------|
+lib\                                         |         |         |         |                   |
+ main.dart                                   |  100.00 |  100.00 |   92.59 |                3,4|
+---------------------------------------------|---------|---------|---------|-------------------|
+
+E:\f\sb\web\test\coverage>
