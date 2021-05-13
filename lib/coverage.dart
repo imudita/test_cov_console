@@ -30,7 +30,7 @@ Future<void> main(List<String> args) async {
     switch (values[0]) {
       case 'SF':
         final fullFileName = values.last;
-        fileName = fullFileName.split('\\').last;
+        fileName = fullFileName.replaceAll('/', '\\').split('\\').last;
         final dir = fullFileName.replaceAll(fileName, '');
         if (dir != directory) {
           directory = dir;
