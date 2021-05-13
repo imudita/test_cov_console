@@ -5,6 +5,9 @@ const percentLen = 9;
 const uncoverLen = 19;
 
 Future<void> main(List<String> args) async {
+  if (args.length == 0) {
+    return;
+  }
   final lcovFile = args[0];
   final lines = await File(lcovFile).readAsLines();
 
@@ -31,7 +34,7 @@ Future<void> main(List<String> args) async {
         final dir = fullFileName.replaceAll(fileName, '');
         if (dir != directory) {
           directory = dir;
-          _print(_formatString(directory, 36, ''), ' ', ' ', ' ', ' ', ' ');
+          _print(_formatString(directory, fileLen, ''), ' ', ' ', ' ', ' ', ' ');
         }
         break;
       case 'DA':
