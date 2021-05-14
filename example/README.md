@@ -1,12 +1,17 @@
-# Flutter Console Coverage Test
+# example
 
-This small dart tools is used to generate Flutter Coverage Test report to console
+Given here an example project that generated using Android Studio => File => New => new Flutter project.
 
-## How to install
-Add a line like this to your package's pubspec.yaml (and run an implicit flutter pub get):
+## Project Explanation
+
+There is no changes on this project since generated, 
+the only change is adding test_cov_console lib to pubspec.yaml.
 ```
 dev_dependencies:
-  test_cov_console: ^0.0.2
+  flutter_test:
+    sdk: flutter
+  test_cov_console:
+    path: ../
 ```
 
 ## How to run
