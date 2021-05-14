@@ -2,14 +2,12 @@ name: test_cov_console
 description: Command line utility to read lcov.info and print the coverage report to console.
 version: 0.0.1
 homepage: https://github.com/imudita/test_cov_console
-authors:
-  - I Made Mudita <imudita@gmail.com>
 
 environment:
   sdk: '>=2.7.0 <3.0.0'
 
 executables:
-  test_cov:
+  test_cov_console:
 
 dependencies:
   flutter:
