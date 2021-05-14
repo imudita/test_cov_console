@@ -1,27 +1,22 @@
-import 'dart:io';
+// Copyright (c) 2021, I Made Mudita. All rights reserved. Use of this source code
+// is governed by a BSD-style license that can be found in the LICENSE file.
 
 const fileLen = 45;
 const percentLen = 9;
 const uncoverLen = 19;
 
-Future<void> main(List<String> args) async {
-  if (args.length == 0) {
-    return;
-  }
-  final lcovFile = args[0];
-  final lines = await File(lcovFile).readAsLines();
-
+void printCoverage(List<String> lines) {
   _print('-', '-', '-', '-', '-', '-');
   _print(
       'File', '% Branch ', '% Funcs ', '% Lines ', 'Uncovered Line #s ', ' ');
   _print('-', '-', '-', '-', '-', '-');
   lines.fold([0, 0, 0, 0, 0, 0, '', '', '', ''], (List<dynamic> data, line) {
-    var functionFound = data[0];
-    var functionHit = data[1];
-    var linesFound = data[2];
-    var linesHit = data[3];
-    var branchFound = data[4];
-    var branchHit = data[5];
+    int functionFound = data[0];
+    int functionHit = data[1];
+    int linesFound = data[2];
+    int linesHit = data[3];
+    int branchFound = data[4];
+    int branchHit = data[5];
     String uncoveredLines = data[6];
     String uncoveredBranch = data[7];
     String fileName = data[8];
@@ -34,7 +29,8 @@ Future<void> main(List<String> args) async {
         final dir = fullFileName.replaceAll(fileName, '');
         if (dir != directory) {
           directory = dir;
-          _print(_formatString(directory, fileLen, ''), ' ', ' ', ' ', ' ', ' ');
+          _print(
+              _formatString(directory, fileLen, ''), ' ', ' ', ' ', ' ', ' ');
         }
         break;
       case 'DA':
@@ -79,7 +75,7 @@ Future<void> main(List<String> args) async {
             uncoveredBranch = '';
           }
           var uncovered =
-          uncoveredLines.isEmpty ? uncoveredBranch : uncoveredLines;
+              uncoveredLines.isEmpty ? uncoveredBranch : uncoveredLines;
           uncovered = _formatString(uncovered, uncoverLen, '...');
           final file = _formatString(' $fileName', fileLen, '');
           _print(file, branch, functions, lines, uncovered, ' ');
@@ -111,7 +107,7 @@ Future<void> main(List<String> args) async {
   _print('-', '-', '-', '-', '-', '-');
 }
 
-String _formatPercent(hit, found) {
+String _formatPercent(int hit, int found) {
   if (found == 0) {
     return '100.00 ';
   }
@@ -124,7 +120,8 @@ String _formatString(String input, int length, String more) {
       : '$more${input.substring(input.length - length + more.length)}';
 }
 
-void _print(file, branch, function, lines, uncovered, filler) {
+void _print(String file, String branch, String function, String lines,
+    String uncovered, String filler) {
   print('${file.padRight(fileLen, filler)}|'
       '${branch.padLeft(percentLen, filler)}|'
       '${function.padLeft(percentLen, filler)}|'

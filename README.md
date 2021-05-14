@@ -1,12 +1,3 @@
-# coverage
-
-A test coverage project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-
 # Flutter Console Coverage Test
 
 This small dart tools is used to generate Flutter Coverage Test to console
@@ -61,5 +52,5 @@ lib/                                         |         |         |         |    
  main.dart                                   |  100.00 |  100.00 |   92.59 |                3,4|
 ---------------------------------------------|---------|---------|---------|-------------------|
 
-E:\test\coverage>
+%
 ```
