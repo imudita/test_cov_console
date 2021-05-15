@@ -1,6 +1,7 @@
 ## 0.0.3 - 16 May 2021
 
 * Print all dart files, not only that reported on lcov.info (has unit test file)
+* Print total coverage for all files with unit testing.
 
 ## 0.0.3 - 15 May 2021
 

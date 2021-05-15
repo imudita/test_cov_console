@@ -12,24 +12,41 @@ const _dart = 'dart';
 const _slash = '/';
 const _bSlash = '\\';
 
+class _Data {
+  int functionFound = 0;
+  int functionHit = 0;
+  int linesFound = 0;
+  int linesHit = 0;
+  int branchFound = 0;
+  int branchHit = 0;
+  String uncoveredLines = '';
+  String uncoveredBranch = '';
+  String fileName = '';
+  String directory = '';
+
+  _Data(fileName, directory) {
+    this.fileName = fileName;
+    this.directory = directory;
+  }
+
+  void total(_Data data) {
+    functionFound += data.functionFound;
+    functionHit += data.functionHit;
+    linesFound += data.linesFound;
+    linesHit += data.linesHit;
+    branchFound += data.branchFound;
+    branchHit += data.branchHit;
+  }
+}
+
 void printCoverage(List<String> lines, List<String> files) {
   var idx = 0;
   _print('-', '-', '-', '-', '-', '-');
   _print(
       'File', '% Branch ', '% Funcs ', '% Lines ', 'Uncovered Line #s ', ' ');
   _print('-', '-', '-', '-', '-', '-');
-  final result = lines.fold([0, 0, 0, 0, 0, 0, '', '', '', ''],
-      (List<dynamic> data, line) {
-    int functionFound = data[0];
-    int functionHit = data[1];
-    int linesFound = data[2];
-    int linesHit = data[3];
-    int branchFound = data[4];
-    int branchHit = data[5];
-    String uncoveredLines = data[6];
-    String uncoveredBranch = data[7];
-    String fileName = data[8];
-    String directory = data[9];
+  final result = lines.fold(<_Data>[_Data('', ''), _Data('', '')], (data, line) {
+    var data0 = data[0];
     final values = line.split(':');
     switch (values[0]) {
       case 'SF':
@@ -37,7 +54,7 @@ void printCoverage(List<String> lines, List<String> files) {
         for (var i = idx; i < files.length; i++) {
           idx = i;
           if (fullFileName.compareTo(files[i]) < 0) {
-            _printDir(files[i], directory, true);
+            _printDir(files[i], data0.directory, true);
           } else {
             break;
           }
@@ -47,86 +64,61 @@ void printCoverage(List<String> lines, List<String> files) {
                 fullFileName.compareTo(files[idx]) < 0)) {
           idx = idx + 1;
         }
-        final result = _printDir(fullFileName, directory, false);
-        fileName = result[0];
-        directory = result[1];
+        final result = _printDir(fullFileName, data0.directory, false);
+        data0.fileName = result[0];
+        data0.directory = result[1];
         break;
       case 'DA':
         if (line.endsWith('0')) {
-          uncoveredLines = (uncoveredLines != '' ? '$uncoveredLines,' : '') +
-              values[1].split(',')[0];
+          data0.uncoveredLines =
+              (data0.uncoveredLines != '' ? '${data0.uncoveredLines},' : '') +
+                  values[1].split(',')[0];
         }
         break;
       case 'LF':
-        linesFound = int.parse(values[1]);
+        data0.linesFound = int.parse(values[1]);
         break;
       case 'LH':
-        linesHit = int.parse(values[1]);
+        data0.linesHit = int.parse(values[1]);
         break;
       case 'FNF':
-        functionFound = int.parse(values[1]);
+        data0.functionFound = int.parse(values[1]);
         break;
       case 'FNH':
-        functionHit = int.parse(values[1]);
+        data0.functionHit = int.parse(values[1]);
         break;
       case 'BRF':
-        branchFound = int.parse(values[1]);
+        data0.branchFound = int.parse(values[1]);
         break;
       case 'BRH':
-        branchHit = int.parse(values[1]);
+        data0.branchHit = int.parse(values[1]);
         break;
       case 'BRDA':
         if (line.endsWith('0')) {
-          uncoveredBranch = (uncoveredBranch != '' ? '$uncoveredBranch,' : '') +
-              values[1].split(',')[0];
+          data0.uncoveredBranch =
+              (data0.uncoveredBranch != '' ? '${data0.uncoveredBranch},' : '') +
+                  values[1].split(',')[0];
         }
         break;
       case 'end_of_record':
         {
-          final functions = _formatPercent(functionHit, functionFound);
-          final lines = _formatPercent(linesHit, linesFound);
-          final branch = _formatPercent(branchHit, branchFound);
-          if (functions.trim() == _hundred &&
-              lines.trim() == _hundred &&
-              branch.trim() == _hundred) {
-            uncoveredLines = '';
-            uncoveredBranch = '';
-          }
-          var uncovered =
-              uncoveredLines.isEmpty ? uncoveredBranch : uncoveredLines;
-          uncovered = _formatString(uncovered, _uncoverLen, '...');
-          final file = _formatString(' $fileName', _fileLen, '');
-          _print(file, branch, functions, lines, uncovered, ' ');
-          linesFound = 0;
-          linesHit = 0;
-          functionHit = 0;
-          functionFound = 0;
-          branchHit = 0;
-          branchFound = 0;
-          uncoveredLines = '';
-          uncoveredBranch = '';
+          data0 = _printFile(data0);
+          data[1].total(data0);
+          data0 = _Data(data0.fileName, data0.directory);
         }
         break;
     }
 
-    return [
-      functionFound,
-      functionHit,
-      linesFound,
-      linesHit,
-      branchFound,
-      branchHit,
-      uncoveredLines,
-      uncoveredBranch,
-      fileName,
-      directory,
-    ];
+    return [data0,data[1]];
   });
   if (idx < files.length) {
     for (var i = idx; i < files.length; i++) {
-      _printDir(files[i], result[9], true);
+      _printDir(files[i], result[0].directory, true);
     }
   }
+  _print('-', '-', '-', '-', '-', '-');
+  result[1].fileName = 'All files with unit testing';
+  _printFile(result[1]);
   _print('-', '-', '-', '-', '-', '-');
 }
 
@@ -138,9 +130,30 @@ List<String> _printDir(String fullFileName, String directory, bool printFile) {
     _print(_formatString(directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
   }
   if (printFile) {
-    _print(' $fileName', _zero, _zero, _zero, ' All', ' ');
+    _print(' $fileName', _zero, _zero, _zero, 'no unit testing', ' ');
   }
   return [fileName, directory];
+}
+
+_Data _printFile(_Data data0) {
+  final functions =
+  _formatPercent(data0.functionHit, data0.functionFound);
+  final lines = _formatPercent(data0.linesHit, data0.linesFound);
+  final branch = _formatPercent(data0.branchHit, data0.branchFound);
+  if (functions.trim() == _hundred &&
+      lines.trim() == _hundred &&
+      branch.trim() == _hundred) {
+    data0.uncoveredLines = '';
+    data0.uncoveredBranch = '';
+  }
+  var uncovered = data0.uncoveredLines.isEmpty
+      ? data0.uncoveredBranch
+      : data0.uncoveredLines;
+  uncovered = _formatString(uncovered, _uncoverLen, '...');
+  final file = _formatString(' ${data0.fileName}', _fileLen, '');
+  _print(file, branch, functions, lines, uncovered, ' ');
+
+  return data0;
 }
 
 String _formatPercent(int hit, int found) {
