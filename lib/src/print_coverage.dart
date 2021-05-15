@@ -1,9 +1,9 @@
 // Copyright (c) 2021, I Made Mudita. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-const fileLen = 45;
-const percentLen = 9;
-const uncoverLen = 19;
+const _fileLen = 45;
+const _percentLen = 9;
+const _uncoverLen = 19;
 
 void printCoverage(List<String> lines) {
   _print('-', '-', '-', '-', '-', '-');
@@ -30,7 +30,7 @@ void printCoverage(List<String> lines) {
         if (dir != directory) {
           directory = dir;
           _print(
-              _formatString(directory, fileLen, ''), ' ', ' ', ' ', ' ', ' ');
+              _formatString(directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
         }
         break;
       case 'DA':
@@ -76,8 +76,8 @@ void printCoverage(List<String> lines) {
           }
           var uncovered =
               uncoveredLines.isEmpty ? uncoveredBranch : uncoveredLines;
-          uncovered = _formatString(uncovered, uncoverLen, '...');
-          final file = _formatString(' $fileName', fileLen, '');
+          uncovered = _formatString(uncovered, _uncoverLen, '...');
+          final file = _formatString(' $fileName', _fileLen, '');
           _print(file, branch, functions, lines, uncovered, ' ');
           linesFound = 0;
           linesHit = 0;
@@ -122,9 +122,9 @@ String _formatString(String input, int length, String more) {
 
 void _print(String file, String branch, String function, String lines,
     String uncovered, String filler) {
-  print('${file.padRight(fileLen, filler)}|'
-      '${branch.padLeft(percentLen, filler)}|'
-      '${function.padLeft(percentLen, filler)}|'
-      '${lines.padLeft(percentLen, filler)}|'
-      '${uncovered.padLeft(uncoverLen, filler)}|');
+  print('${file.padRight(_fileLen, filler)}|'
+      '${branch.padLeft(_percentLen, filler)}|'
+      '${function.padLeft(_percentLen, filler)}|'
+      '${lines.padLeft(_percentLen, filler)}|'
+      '${uncovered.padLeft(_uncoverLen, filler)}|');
 }
