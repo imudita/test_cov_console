@@ -12,6 +12,26 @@ const _dart = 'dart';
 const _slash = '/';
 const _bSlash = '\\';
 
+class FileEntity {
+  String fileName = '';
+  String directory = '';
+
+  FileEntity(String fullName) {
+    fileName = fullName.split(_slash).last;
+    directory = fullName.replaceAll(fileName, '');
+  }
+
+  int compareTo(FileEntity other) {
+    if (directory.compareTo(other.directory) < 0) {
+      return -1;
+    }
+    if (directory.compareTo(other.directory) > 0) {
+      return 1;
+    }
+    return fileName.compareTo(other.fileName);
+  }
+}
+
 class _Data {
   int functionFound = 0;
   int functionHit = 0;
@@ -21,13 +41,15 @@ class _Data {
   int branchHit = 0;
   String uncoveredLines = '';
   String uncoveredBranch = '';
-  String fileName = '';
-  String directory = '';
+  FileEntity file;
 
-  _Data(fileName, directory) {
-    this.fileName = fileName;
-    this.directory = directory;
+  _Data(FileEntity file) {
+    this.file = file;
   }
+
+  String getFileName() => file.fileName;
+
+  String getDirectory() => file.directory;
 
   void total(_Data data) {
     functionFound += data.functionFound;
@@ -39,34 +61,35 @@ class _Data {
   }
 }
 
-void printCoverage(List<String> lines, List<String> files) {
+void printCoverage(List<String> lines, List<FileEntity> files) {
   var idx = 0;
   _print('-', '-', '-', '-', '-', '-');
   _print(
       'File', '% Branch ', '% Funcs ', '% Lines ', 'Uncovered Line #s ', ' ');
   _print('-', '-', '-', '-', '-', '-');
-  final result = lines.fold(<_Data>[_Data('', ''), _Data('', '')], (data, line) {
+  final result = lines
+      .fold(<_Data>[_Data(FileEntity('')), _Data(FileEntity(''))],
+          (List<_Data> data, line) {
     var data0 = data[0];
     final values = line.split(':');
     switch (values[0]) {
       case 'SF':
-        final fullFileName = values.last.replaceAll(_bSlash, _slash);
+        final file = FileEntity(values.last.replaceAll(_bSlash, _slash));
         for (var i = idx; i < files.length; i++) {
           idx = i;
-          if (fullFileName.compareTo(files[i]) < 0) {
-            _printDir(files[i], data0.directory, true);
+          if (file.compareTo(files[i]) > 0) {
+            _printDir(files[i], data0.getDirectory(), true);
+            data0.file.directory = files[i].directory;
           } else {
             break;
           }
         }
-        if ((idx < files.length && fullFileName.compareTo(files[idx]) == 0) ||
-            (idx == (files.length - 1) &&
-                fullFileName.compareTo(files[idx]) < 0)) {
+        if ((idx < files.length && file.compareTo(files[idx]) == 0) ||
+            (idx == (files.length - 1) && file.compareTo(files[idx]) > 0)) {
           idx = idx + 1;
         }
-        final result = _printDir(fullFileName, data0.directory, false);
-        data0.fileName = result[0];
-        data0.directory = result[1];
+        final result = _printDir(file, data0.getDirectory(), false);
+        data0.file = result;
         break;
       case 'DA':
         if (line.endsWith('0')) {
@@ -104,40 +127,37 @@ void printCoverage(List<String> lines, List<String> files) {
         {
           data0 = _printFile(data0);
           data[1].total(data0);
-          data0 = _Data(data0.fileName, data0.directory);
+          data0 = _Data(data0.file);
         }
         break;
     }
 
-    return [data0,data[1]];
+    return [data0, data[1]];
   });
   if (idx < files.length) {
     for (var i = idx; i < files.length; i++) {
-      _printDir(files[i], result[0].directory, true);
+      _printDir(files[i], result[0].getDirectory(), true);
     }
   }
   _print('-', '-', '-', '-', '-', '-');
-  result[1].fileName = 'All files with unit testing';
+  result[1].file = FileEntity('All files with unit testing');
   _printFile(result[1]);
   _print('-', '-', '-', '-', '-', '-');
 }
 
-List<String> _printDir(String fullFileName, String directory, bool printFile) {
-  final fileName = fullFileName.split(_slash).last;
-  final dir = fullFileName.replaceAll(fileName, '');
-  if (dir != directory) {
-    directory = dir;
-    _print(_formatString(directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
+FileEntity _printDir(FileEntity file, String directory, bool printFile) {
+  if (file.directory != directory) {
+    _print(
+        _formatString(file.directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
   }
   if (printFile) {
-    _print(' $fileName', _zero, _zero, _zero, 'no unit testing', ' ');
+    _print(' ${file.fileName}', _zero, _zero, _zero, 'no unit testing', ' ');
   }
-  return [fileName, directory];
+  return file;
 }
 
 _Data _printFile(_Data data0) {
-  final functions =
-  _formatPercent(data0.functionHit, data0.functionFound);
+  final functions = _formatPercent(data0.functionHit, data0.functionFound);
   final lines = _formatPercent(data0.linesHit, data0.linesFound);
   final branch = _formatPercent(data0.branchHit, data0.branchFound);
   if (functions.trim() == _hundred &&
@@ -150,7 +170,7 @@ _Data _printFile(_Data data0) {
       ? data0.uncoveredBranch
       : data0.uncoveredLines;
   uncovered = _formatString(uncovered, _uncoverLen, '...');
-  final file = _formatString(' ${data0.fileName}', _fileLen, '');
+  final file = _formatString(' ${data0.getFileName()}', _fileLen, '');
   _print(file, branch, functions, lines, uncovered, ' ');
 
   return data0;
@@ -178,14 +198,15 @@ void _print(String file, String branch, String function, String lines,
       '${uncovered.padLeft(_uncoverLen, filler)}|');
 }
 
-Future<List<String>> getFiles(String path) async {
+Future<List<FileEntity>> getFiles(String path) async {
   final dir = Directory(path);
   final files = await dir.list(recursive: true).toList();
-  final List<String> list = [];
+  final List<FileEntity> list = [];
   files.forEach((element) {
     final String file = element.uri.toString();
     if (file.split('.').last == _dart) {
-      list.add(element.uri.toString());
+      final file = FileEntity(element.uri.toString());
+      list.add(file);
     }
   });
   return list;
