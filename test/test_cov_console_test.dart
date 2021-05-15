@@ -10,7 +10,7 @@ void main() {
   final printout = output.split('\n');
   group('printCoverage', () {
     test('should print out with correct format & values', overridePrint(() {
-      printCoverage(lines);
+      printCoverage(lines, files);
       expect(log, printout);
     }));
   });
@@ -24,6 +24,10 @@ void Function() overridePrint(void testFn()) => () {
       return Zone.current.fork(specification: spec).run<void>(testFn);
     };
 
+const List<String> files = [
+  'lib/src/print_coverage.dart',
+  'lib/test_cov_console.dart',
+];
 const String lcovFile = '''
 SF:lib/src/print_coverage.dart
 DA:8,1
@@ -106,4 +110,6 @@ File                                         |% Branch | % Funcs | % Lines | Unc
 ---------------------------------------------|---------|---------|---------|-------------------|
 lib/src/                                     |         |         |         |                   |
  print_coverage.dart                         |  100.00 |  100.00 |   86.96 |...,61,62,63,73,120|
+lib/                                         |         |         |         |                   |
+ test_cov_console.dart                       |    0.00 |    0.00 |    0.00 |                All|
 ---------------------------------------------|---------|---------|---------|-------------------|''';

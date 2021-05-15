@@ -1,16 +1,25 @@
 // Copyright (c) 2021, I Made Mudita. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
+import 'dart:io';
+
 const _fileLen = 45;
 const _percentLen = 9;
 const _uncoverLen = 19;
+const _hundred = '100.00';
+const _zero = '0.00 ';
+const _dart = 'dart';
+const _slash = '/';
+const _bSlash = '\\';
 
-void printCoverage(List<String> lines) {
+void printCoverage(List<String> lines, List<String> files) {
+  var idx = 0;
   _print('-', '-', '-', '-', '-', '-');
   _print(
       'File', '% Branch ', '% Funcs ', '% Lines ', 'Uncovered Line #s ', ' ');
   _print('-', '-', '-', '-', '-', '-');
-  lines.fold([0, 0, 0, 0, 0, 0, '', '', '', ''], (List<dynamic> data, line) {
+  final result = lines.fold([0, 0, 0, 0, 0, 0, '', '', '', ''],
+      (List<dynamic> data, line) {
     int functionFound = data[0];
     int functionHit = data[1];
     int linesFound = data[2];
@@ -24,14 +33,23 @@ void printCoverage(List<String> lines) {
     final values = line.split(':');
     switch (values[0]) {
       case 'SF':
-        final fullFileName = values.last;
-        fileName = fullFileName.replaceAll('/', '\\').split('\\').last;
-        final dir = fullFileName.replaceAll(fileName, '');
-        if (dir != directory) {
-          directory = dir;
-          _print(
-              _formatString(directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
+        final fullFileName = values.last.replaceAll(_bSlash, _slash);
+        for (var i = idx; i < files.length; i++) {
+          idx = i;
+          if (fullFileName.compareTo(files[i]) < 0) {
+            _printDir(files[i], directory, true);
+          } else {
+            break;
+          }
         }
+        if ((idx < files.length && fullFileName.compareTo(files[idx]) == 0) ||
+            (idx == (files.length - 1) &&
+                fullFileName.compareTo(files[idx]) < 0)) {
+          idx = idx + 1;
+        }
+        final result = _printDir(fullFileName, directory, false);
+        fileName = result[0];
+        directory = result[1];
         break;
       case 'DA':
         if (line.endsWith('0')) {
@@ -68,9 +86,9 @@ void printCoverage(List<String> lines) {
           final functions = _formatPercent(functionHit, functionFound);
           final lines = _formatPercent(linesHit, linesFound);
           final branch = _formatPercent(branchHit, branchFound);
-          if (functions.trim() == '100.00' &&
-              lines.trim() == '100.00' &&
-              branch.trim() == '100.00') {
+          if (functions.trim() == _hundred &&
+              lines.trim() == _hundred &&
+              branch.trim() == _hundred) {
             uncoveredLines = '';
             uncoveredBranch = '';
           }
@@ -104,12 +122,30 @@ void printCoverage(List<String> lines) {
       directory,
     ];
   });
+  if (idx < files.length) {
+    for (var i = idx; i < files.length; i++) {
+      _printDir(files[i], result[9], true);
+    }
+  }
   _print('-', '-', '-', '-', '-', '-');
+}
+
+List<String> _printDir(String fullFileName, String directory, bool printFile) {
+  final fileName = fullFileName.split(_slash).last;
+  final dir = fullFileName.replaceAll(fileName, '');
+  if (dir != directory) {
+    directory = dir;
+    _print(_formatString(directory, _fileLen, ''), ' ', ' ', ' ', ' ', ' ');
+  }
+  if (printFile) {
+    _print(' $fileName', _zero, _zero, _zero, ' All', ' ');
+  }
+  return [fileName, directory];
 }
 
 String _formatPercent(int hit, int found) {
   if (found == 0) {
-    return '100.00 ';
+    return '$_hundred ';
   }
   return '${(hit / found * 100).toStringAsFixed(2)} ';
 }
@@ -127,4 +163,17 @@ void _print(String file, String branch, String function, String lines,
       '${function.padLeft(_percentLen, filler)}|'
       '${lines.padLeft(_percentLen, filler)}|'
       '${uncovered.padLeft(_uncoverLen, filler)}|');
+}
+
+Future<List<String>> getFiles(String path) async {
+  final dir = Directory(path);
+  final files = await dir.list(recursive: true).toList();
+  final List<String> list = [];
+  files.forEach((element) {
+    final String file = element.uri.toString();
+    if (file.split('.').last == _dart) {
+      list.add(element.uri.toString());
+    }
+  });
+  return list;
 }
