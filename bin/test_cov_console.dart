@@ -22,6 +22,7 @@ Future main(List<String> args) async {
   }
 
   final lines = await File(lcovFile).readAsLines();
+  final files = await getFiles('lib');
 
-  printCoverage(lines);
+  printCoverage(lines, files);
 }
